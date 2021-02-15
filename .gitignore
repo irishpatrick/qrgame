@@ -1,6 +1,7 @@
 *.swp
 tools/
 zbar/
+games/
 
 # Binaries for programs and plugins
 *.exe
