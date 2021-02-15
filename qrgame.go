@@ -6,6 +6,7 @@ import (
     "os"
     "os/exec"
     "path/filepath"
+    "io"
     "io/ioutil"
     "bytes"
     "crypto/sha256"
@@ -30,13 +31,11 @@ func load(fn string) {
     if err != nil {
         fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
         log.Fatal(err)
-        return
     }
 
     uncompressed, err := cbrotli.Decode(out.Bytes())
     if err != nil {
         log.Fatal(err)
-        return
     }
 
     hash := sha256.Sum256(uncompressed)
@@ -53,20 +52,33 @@ func load(fn string) {
         //log.Fatal(err)
     }
 
-    fp, err := os.Create(filepath.Join(path, "a.out"))
+    fp, err := os.Create(filepath.Join(path, "app"))
     if err != nil {
         log.Fatal(err)
-        return
     }
 
-    err = ioutil.WriteFile("./a.out", uncompressed, 0644)
+    fp, err = os.Create(filepath.Join(path, "qr.png"))
     if err != nil {
         log.Fatal(err)
-        return
+    }
+    defer fp.Close()
+
+    fp2, err := os.Open(fn)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    _, err = io.Copy(fp, fp2)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    err = ioutil.WriteFile(filepath.Join(path, "app"), uncompressed, 0755)
+    if err != nil {
+        log.Fatal(err)
     }
 
     defer fp.Close()
-
 }
 
 func main() {
