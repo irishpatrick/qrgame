@@ -5,9 +5,11 @@ import (
     "log"
     "os"
     "os/exec"
+    "path/filepath"
     "io/ioutil"
-    //"strings"
     "bytes"
+    "crypto/sha256"
+    "encoding/hex"
     "github.com/google/brotli/go/cbrotli"
     //"github.com/skip2/go-qrcode"
 )
@@ -37,7 +39,21 @@ func load(fn string) {
         return
     }
 
-    fp, err := os.Create("./a.out")
+    hash := sha256.Sum256(uncompressed)
+    valid := false
+    // todo validate
+    if !valid {
+        fmt.Println("WARNING: Unverified Cartridge")
+    }
+
+    path := filepath.Join("./games", hex.EncodeToString(hash[:]))
+
+    err = os.Mkdir(path, 0755)
+    if err != nil {
+        //log.Fatal(err)
+    }
+
+    fp, err := os.Create(filepath.Join(path, "a.out"))
     if err != nil {
         log.Fatal(err)
         return
@@ -50,6 +66,7 @@ func load(fn string) {
     }
 
     defer fp.Close()
+
 }
 
 func main() {
@@ -58,10 +75,12 @@ func main() {
     if len(args) == 2 {
         verb := args[0]
         noun := args[1]
-        fmt.Println(verb, noun)
+        //fmt.Println(verb, noun)
 
         if verb == "load" {
             load(noun)
+        } else if verb == "pack" {
+            fmt.Println("todo pack")
         }
     } else {
         show_help()
